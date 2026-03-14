@@ -29,6 +29,7 @@ export default function EditProductPage() {
     reorderQty: '50',
     orderingCost: '50',
     holdingCost: '2',
+    avgDailyDemand: '5',
     supplierId: '',
   });
 
@@ -53,6 +54,7 @@ export default function EditProductPage() {
           reorderQty: product.reorderQty.toString(),
           orderingCost: product.orderingCost.toString(),
           holdingCost: product.holdingCost.toString(),
+          avgDailyDemand: product.avgDailyDemand.toString(),
           supplierId: product.supplierId || '',
         });
 
@@ -92,6 +94,8 @@ export default function EditProductPage() {
     return <div className="text-center py-20">Loading product...</div>;
   }
 
+  const annualDemand = (parseFloat(formData.avgDailyDemand || '0') * 365).toFixed(0);
+
   return (
     <div className="max-w-3xl">
       <Link href="/products">
@@ -117,7 +121,6 @@ export default function EditProductPage() {
                 value={formData.sku}
                 onChange={handleChange}
                 className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="SKU-001"
               />
             </div>
 
@@ -132,7 +135,6 @@ export default function EditProductPage() {
                 value={formData.name}
                 onChange={handleChange}
                 className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="Widget A"
               />
             </div>
           </div>
@@ -145,7 +147,6 @@ export default function EditProductPage() {
               onChange={handleChange}
               rows={3}
               className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Product description..."
             />
           </div>
 
@@ -158,7 +159,6 @@ export default function EditProductPage() {
                 value={formData.category}
                 onChange={handleChange}
                 className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="Electronics"
               />
             </div>
 
@@ -170,7 +170,6 @@ export default function EditProductPage() {
                 value={formData.unit}
                 onChange={handleChange}
                 className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="pcs, kg, litre"
               />
             </div>
 
@@ -191,9 +190,6 @@ export default function EditProductPage() {
                   </option>
                 ))}
               </select>
-              <p className="text-xs text-blue-600 mt-1">
-                ⭐ Link this product to a supplier
-              </p>
             </div>
           </div>
 
@@ -207,7 +203,6 @@ export default function EditProductPage() {
                 value={formData.costPrice}
                 onChange={handleChange}
                 className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="0.00"
               />
             </div>
 
@@ -220,7 +215,6 @@ export default function EditProductPage() {
                 value={formData.sellingPrice}
                 onChange={handleChange}
                 className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="0.00"
               />
             </div>
           </div>
@@ -242,7 +236,7 @@ export default function EditProductPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">Reorder Quantity</label>
+                <label className="block text-sm font-medium text-slate-700 mb-2">Reorder Quantity (Manual)</label>
                 <input
                   type="number"
                   name="reorderQty"
@@ -250,7 +244,7 @@ export default function EditProductPage() {
                   onChange={handleChange}
                   className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
-                <p className="text-xs text-slate-500 mt-1">Amount to order when restocking</p>
+                <p className="text-xs text-slate-500 mt-1">Used when EOQ = 0</p>
               </div>
             </div>
 
@@ -280,6 +274,35 @@ export default function EditProductPage() {
                 />
                 <p className="text-xs text-slate-500 mt-1">Storage cost per unit (EOQ)</p>
               </div>
+            </div>
+          </div>
+
+          {/* ✅ NEW SECTION: EOQ TESTING PARAMETERS */}
+          <div className="border-t border-slate-200 pt-6 bg-blue-50 p-4 rounded-lg">
+            <h3 className="font-semibold text-slate-800 mb-2 flex items-center gap-2">
+              🧪 EOQ Testing Parameters
+              <span className="text-xs font-normal text-slate-500">(Phase 4 will auto-calculate)</span>
+            </h3>
+            
+            <div className="mt-4">
+              <label className="block text-sm font-medium text-slate-700 mb-2">
+                Average Daily Demand (units/day)
+              </label>
+              <input
+                type="number"
+                name="avgDailyDemand"
+                step="0.1"
+                min="0"
+                value={formData.avgDailyDemand}
+                onChange={handleChange}
+                className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+              <p className="text-xs text-slate-600 mt-1">
+                💡 <strong>Testing:</strong> Set to 0 to use manual Reorder Qty. Set to 10+ to see higher EOQ.
+              </p>
+              <p className="text-xs text-slate-500 mt-1">
+                Annual Demand = {formData.avgDailyDemand} × 365 = <strong>{annualDemand}</strong> units/year
+              </p>
             </div>
           </div>
 

@@ -10,11 +10,15 @@ import purchaseOrderRoutes from './routes/purchaseOrderRoutes';
 import reorderRoutes from './routes/reorderRoutes';
 import { errorHandler } from './middleware/errorHandler';
 import { initCronJobs } from './cron/scheduler';
+import forecastRoutes from './routes/forecastRoutes';
+
 
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+
+app.use('/api/forecasts', forecastRoutes);
 
 // ── Middleware ────────────────────────────────────────────────
 app.use(cors({ origin: process.env.FRONTEND_URL || 'http://localhost:3000' }));

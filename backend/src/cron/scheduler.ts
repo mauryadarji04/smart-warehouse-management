@@ -1,5 +1,6 @@
 import cron from 'node-cron';
 import { checkAndCreatePurchaseOrders } from '../services/reorderService';
+import { runNightlyForecast, updateForecastAccuracy } from '../services/forecastingService';
 
 // ── Cron Jobs — each phase adds its job here ──────────────────
 // Times are set via .env so they're easily adjustable
@@ -28,6 +29,16 @@ export const initCronJobs = () => {
   cron.schedule(process.env.CRON_EXPIRY_CHECK || '0 7 * * *', async () => {
     console.log('[CRON] Running expiry check...');
     // import & call: ExpiryService.checkExpiringItems()
+  });
+
+  cron.schedule(process.env.CRON_FORECAST_RUN || '0 0 * * *', async () => {
+    console.log('[CRON] Running demand forecast...');
+    try {
+      await runNightlyForecast();
+      await updateForecastAccuracy();
+    } catch (error) {
+      console.error('[CRON] Forecast failed:', error);
+    }
   });
 
   console.log('✅ Cron jobs scheduled');

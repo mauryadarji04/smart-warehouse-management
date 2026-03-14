@@ -149,12 +149,42 @@ export const stockOut = async (req: Request, res: Response) => {
       remaining -= deduct;
     }
 
+    // ═══════════════════════════════════════════════════════════════════
+    // ✅ PHASE 4 ADDITION: Record sale for demand forecasting
+    // This must be inside the transaction to ensure atomicity
+    // ═══════════════════════════════════════════════════════════════════
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Normalize to start of day
+
+    updates.push(
+      prisma.salesHistory.upsert({
+        where: {
+          productId_date: {
+            productId,
+            date: today,
+          },
+        },
+        update: {
+          quantity: { increment: parseInt(quantity) },
+        },
+        create: {
+          productId,
+          date: today,
+          quantity: parseInt(quantity),
+        },
+      })
+    );
+    // ═══════════════════════════════════════════════════════════════════
+    // END PHASE 4 ADDITION
+    // ═══════════════════════════════════════════════════════════════════
+
+    // Execute all updates in a single transaction (atomicity guaranteed)
     await prisma.$transaction(updates);
 
     // Check if stock fell below reorder point → trigger alert
     const product = await prisma.product.findUnique({ where: { id: productId } });
     if (product) {
-      const newTotal = totalAvailable - quantity;
+      const newTotal = totalAvailable - parseInt(quantity);
       if (newTotal < product.reorderPoint) {
         // Create low stock alert if not already exists
         const existingAlert = await prisma.alert.findFirst({
@@ -173,7 +203,7 @@ export const stockOut = async (req: Request, res: Response) => {
       }
     }
 
-    sendSuccess(res, { quantityRemoved: quantity }, 'Stock removed successfully');
+    sendSuccess(res, { quantityRemoved: parseInt(quantity) }, 'Stock removed successfully');
   } catch (err) {
     if (err instanceof AppError) return sendError(res, err.message, err.statusCode);
     sendError(res, 'Failed to remove stock', 500);
