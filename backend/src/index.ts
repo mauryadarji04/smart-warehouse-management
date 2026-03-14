@@ -11,14 +11,13 @@ import reorderRoutes from './routes/reorderRoutes';
 import { errorHandler } from './middleware/errorHandler';
 import { initCronJobs } from './cron/scheduler';
 import forecastRoutes from './routes/forecastRoutes';
+import analyticsRoutes from './routes/analyticsRoutes';
 
 
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
-
-app.use('/api/forecasts', forecastRoutes);
 
 // ── Middleware ────────────────────────────────────────────────
 app.use(cors({ origin: process.env.FRONTEND_URL || 'http://localhost:3000' }));
@@ -31,7 +30,7 @@ app.get('/health', (_req, res) => {
     status: 'OK', 
     timestamp: new Date().toISOString(), 
     env: process.env.NODE_ENV,
-    phase: 'Phase 3 — EOQ Auto-Reorder'
+    phase: 'Phase 6 — Analytics Dashboard'  // Updated
   });
 });
 
@@ -48,11 +47,11 @@ app.use('/api/purchase-orders', purchaseOrderRoutes);
 // Phase 3
 app.use('/api/reorder', reorderRoutes);
 
-// Phase 4: Forecasting (coming next)
-// app.use('/api/forecasts', forecastRoutes);
+// Phase 4
+app.use('/api/forecasts', forecastRoutes);
 
-// Phase 6: Analytics
-// app.use('/api/analytics', analyticsRoutes);
+// Phase 6
+app.use('/api/analytics', analyticsRoutes);
 
 // Phase 7: Auth
 // app.use('/api/auth', authRoutes);
@@ -64,7 +63,7 @@ app.use(errorHandler);
 app.listen(PORT, () => {
   console.log(`🚀 Server running on http://localhost:${PORT}`);
   console.log(`📦 Smart Warehouse API — ${process.env.NODE_ENV || 'development'} mode`);
-  console.log(`✅ Phase 3 active: /api/reorder`);
+  console.log(`✅ Phase 6 active: /api/reorder`);
   
   // Initialize cron jobs
   initCronJobs();

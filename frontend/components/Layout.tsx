@@ -2,14 +2,15 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Package, Warehouse, AlertCircle, BarChart3, Users, ShoppingCart, Repeat } from 'lucide-react';
+import { Package, Warehouse, AlertCircle, BarChart3, Users, ShoppingCart, Repeat, TrendingUp } from 'lucide-react';
 import { clsx } from 'clsx';
 
 const navItems = [
   { href: '/', label: 'Dashboard', icon: BarChart3 },
   { href: '/products', label: 'Products', icon: Package },
   { href: '/inventory', label: 'Inventory', icon: Warehouse },
-  { href: '/reorder', label: 'Auto-Reorder', icon: Repeat }, // NEW - Phase 3
+  { href: '/reorder', label: 'Auto-Reorder', icon: Repeat },
+  { href: '/analytics', label: 'Analytics', icon: TrendingUp }, // NEW - Phase 6
   { href: '/alerts', label: 'Alerts', icon: AlertCircle },
   { href: '/suppliers', label: 'Suppliers', icon: Users },
   { href: '/orders', label: 'Purchase Orders', icon: ShoppingCart },
