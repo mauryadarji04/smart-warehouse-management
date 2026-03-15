@@ -1,9 +1,13 @@
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import { prisma } from '../utils/prisma';
+import { sendOTPEmail } from '../utils/emailService';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
-const JWT_EXPIRES_IN = '7d'; // Token valid for 7 days
+const JWT_EXPIRES_IN = '7d';
+
+// In-memory OTP store: email -> { otp, expiresAt }
+const otpStore = new Map<string, { otp: string; expiresAt: number }>();
 
 /**
  * Generate JWT token
@@ -196,4 +200,36 @@ export const getAllUsers = async () => {
 export const deleteUser = async (userId: string) => {
   await prisma.user.delete({ where: { id: userId } });
   return true;
+};
+
+/**
+ * Send OTP to email for password reset
+ */
+export const sendPasswordResetOTP = async (email: string) => {
+  const user = await prisma.user.findUnique({ where: { email } });
+  if (!user) throw new Error('No account found with this email');
+
+  const otp = Math.floor(100000 + Math.random() * 900000).toString();
+  otpStore.set(email, { otp, expiresAt: Date.now() + 10 * 60 * 1000 });
+
+  await sendOTPEmail(email, otp);
+};
+
+/**
+ * Verify OTP and reset password
+ */
+export const resetPasswordWithOTP = async (email: string, otp: string, newPassword: string) => {
+  const record = otpStore.get(email);
+
+  if (!record) throw new Error('OTP not found. Please request a new one');
+  if (Date.now() > record.expiresAt) {
+    otpStore.delete(email);
+    throw new Error('OTP has expired. Please request a new one');
+  }
+  if (record.otp !== otp) throw new Error('Invalid OTP');
+
+  const hashedPassword = await hashPassword(newPassword);
+  await prisma.user.update({ where: { email }, data: { password: hashedPassword } });
+
+  otpStore.delete(email);
 };

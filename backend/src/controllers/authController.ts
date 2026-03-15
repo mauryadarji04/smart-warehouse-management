@@ -115,7 +115,6 @@ export const deleteUser = async (req: Request, res: Response) => {
     const { id } = req.params;
     const currentUserId = (req as any).user?.userId;
 
-    // Prevent deleting yourself
     if (id === currentUserId) {
       throw new AppError('Cannot delete your own account', 400);
     }
@@ -125,5 +124,35 @@ export const deleteUser = async (req: Request, res: Response) => {
   } catch (err: any) {
     if (err instanceof AppError) return sendError(res, err.message, err.statusCode);
     sendError(res, 'Failed to delete user', 500);
+  }
+};
+
+// POST /api/auth/forgot-password — Send OTP to email
+export const forgotPassword = async (req: Request, res: Response) => {
+  try {
+    const { email } = req.body;
+    if (!email) throw new AppError('Email is required', 400);
+
+    await authService.sendPasswordResetOTP(email);
+    sendSuccess(res, null, 'OTP sent to your email');
+  } catch (err: any) {
+    if (err.message === 'No account found with this email') return sendError(res, err.message, 404);
+    if (err instanceof AppError) return sendError(res, err.message, err.statusCode);
+    sendError(res, 'Failed to send OTP', 500);
+  }
+};
+
+// POST /api/auth/reset-password — Verify OTP and set new password
+export const resetPassword = async (req: Request, res: Response) => {
+  try {
+    const { email, otp, newPassword } = req.body;
+    if (!email || !otp || !newPassword) throw new AppError('Email, OTP and new password are required', 400);
+    if (newPassword.length < 6) throw new AppError('Password must be at least 6 characters', 400);
+
+    await authService.resetPasswordWithOTP(email, otp, newPassword);
+    sendSuccess(res, null, 'Password reset successfully');
+  } catch (err: any) {
+    if (err instanceof AppError) return sendError(res, err.message, err.statusCode);
+    sendError(res, err.message || 'Failed to reset password', 400);
   }
 };
