@@ -12,6 +12,7 @@ import { errorHandler } from './middleware/errorHandler';
 import { initCronJobs } from './cron/scheduler';
 import forecastRoutes from './routes/forecastRoutes';
 import analyticsRoutes from './routes/analyticsRoutes';
+import authRoutes from './routes/authRoutes';
 
 
 dotenv.config();
@@ -30,11 +31,14 @@ app.get('/health', (_req, res) => {
     status: 'OK', 
     timestamp: new Date().toISOString(), 
     env: process.env.NODE_ENV,
-    phase: 'Phase 6 — Analytics Dashboard'  // Updated
+    phase: 'Phase 7 — Authentication'
   });
 });
 
 // ── API Routes ────────────────────────────────────────────────
+// Phase 7 (Auth first — all other routes depend on it)
+app.use('/api/auth', authRoutes);
+
 // Phase 1
 app.use('/api/products', productRoutes);
 app.use('/api/inventory', inventoryRoutes);
@@ -53,9 +57,6 @@ app.use('/api/forecasts', forecastRoutes);
 // Phase 6
 app.use('/api/analytics', analyticsRoutes);
 
-// Phase 7: Auth
-// app.use('/api/auth', authRoutes);
-
 // ── Error Handler ─────────────────────────────────────────────
 app.use(errorHandler);
 
@@ -63,7 +64,7 @@ app.use(errorHandler);
 app.listen(PORT, () => {
   console.log(`🚀 Server running on http://localhost:${PORT}`);
   console.log(`📦 Smart Warehouse API — ${process.env.NODE_ENV || 'development'} mode`);
-  console.log(`✅ Phase 6 active: /api/reorder`);
+  console.log(`✅ Phase 7 authentication: /api/auth routes are live`);
   
   // Initialize cron jobs
   initCronJobs();
