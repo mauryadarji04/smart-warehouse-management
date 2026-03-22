@@ -210,6 +210,40 @@ export const stockOut = async (req: Request, res: Response) => {
   }
 };
 
+// GET /api/inventory/movements — transaction history with filters
+export const getMovements = async (req: Request, res: Response) => {
+  try {
+    const { productId, from, to } = req.query;
+
+    const where: any = {};
+    if (productId) where.inventory = { productId: productId as string };
+    if (from || to) {
+      where.createdAt = {};
+      if (from) where.createdAt.gte = new Date(from as string);
+      if (to) {
+        const toDate = new Date(to as string);
+        toDate.setHours(23, 59, 59, 999);
+        where.createdAt.lte = toDate;
+      }
+    }
+
+    const movements = await prisma.inventoryTransaction.findMany({
+      where,
+      include: {
+        inventory: {
+          include: { product: { select: { id: true, name: true, sku: true, unit: true } } },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 200,
+    });
+
+    sendSuccess(res, movements);
+  } catch (err) {
+    sendError(res, 'Failed to fetch movements', 500);
+  }
+};
+
 // GET /api/inventory/low-stock — products below reorder point
 export const getLowStock = async (_req: Request, res: Response) => {
   try {

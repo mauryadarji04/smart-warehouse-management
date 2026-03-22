@@ -5,6 +5,7 @@ const router = Router();
 
 router.get('/', inventoryController.getAllInventory);
 router.get('/low-stock', inventoryController.getLowStock);
+router.get('/movements', inventoryController.getMovements);
 router.get('/:id', inventoryController.getInventoryById);
 router.post('/stock-in', inventoryController.stockIn);
 router.post('/stock-out', inventoryController.stockOut);

@@ -51,6 +51,7 @@ export interface Inventory {
   quantity: number;
   expiryDate?: string;
   location?: string;
+  createdAt?: string;
 }
 
 export interface PurchaseOrder {

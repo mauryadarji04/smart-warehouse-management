@@ -3,7 +3,10 @@
   "version": "1.0.0",
   "description": "Smart Warehouse & Inventory Optimization System",
   "private": true,
-  "workspaces": ["backend", "frontend"],
+  "workspaces": [
+    "backend",
+    "frontend"
+  ],
   "scripts": {
     "dev:backend": "npm run dev --workspace=backend",
     "dev:frontend": "npm run dev --workspace=frontend",
@@ -15,5 +18,13 @@
   },
   "devDependencies": {
     "concurrently": "^8.2.2"
+  },
+  "dependencies": {
+    "class-variance-authority": "^0.7.1",
+    "html2canvas": "^1.4.1",
+    "jspdf": "^4.2.1",
+    "jspdf-autotable": "^5.0.7",
+    "next-themes": "^0.4.6",
+    "xlsx": "^0.18.5"
   }
 }

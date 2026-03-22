@@ -3,26 +3,40 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
 import { api } from '@/lib/api';
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
+
+const inputCls =
+  'w-full px-4 py-2.5 rounded-xl text-sm outline-none transition-all focus:ring-2 focus:ring-blue-500/40';
+
+const Field = ({
+  label, required, hint, children,
+}: {
+  label: string; required?: boolean; hint?: string; children: React.ReactNode;
+}) => (
+  <div>
+    <label className="block text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: 'var(--muted)' }}>
+      {label} {required && <span style={{ color: '#EF4444' }}>*</span>}
+    </label>
+    {children}
+    {hint && <p className="text-xs mt-1.5" style={{ color: 'var(--muted)' }}>{hint}</p>}
+  </div>
+);
 
 export default function NewSupplierPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    address: '',
-    leadTimeDays: '7',
+    name: '', email: '', phone: '', address: '', leadTimeDays: '7',
   });
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
+    setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-
     try {
       await api.post('/suppliers', formData);
       router.push('/suppliers');
@@ -32,101 +46,92 @@ export default function NewSupplierPage() {
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+  const sharedInputStyle = {
+    backgroundColor: 'var(--surface-hover)',
+    border: '1px solid var(--border)',
+    color: 'var(--foreground)',
   };
 
   return (
-    <div className="max-w-2xl">
-      <Link href="/suppliers">
-        <Button variant="ghost" className="mb-6">
-          <ArrowLeft className="w-4 h-4" />
-          Back to Suppliers
-        </Button>
+    <div className="max-w-2xl space-y-6">
+      <Link
+        href="/suppliers"
+        className="inline-flex items-center gap-2 text-sm font-medium transition-colors"
+        style={{ color: 'var(--muted)' }}
+      >
+        <ArrowLeft className="w-4 h-4" /> Back to Suppliers
       </Link>
 
       <Card>
-        <h1 className="text-2xl font-bold mb-6">Add New Supplier</h1>
+        <h1 className="text-xl font-bold mb-6" style={{ color: 'var(--foreground)' }}>
+          Add New Supplier
+        </h1>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">
-              Supplier Name <span className="text-red-500">*</span>
-            </label>
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <Field label="Supplier Name" required>
             <input
-              type="text"
-              name="name"
-              required
-              value={formData.name}
-              onChange={handleChange}
-              className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              type="text" name="name" required
+              value={formData.name} onChange={handleChange}
               placeholder="ACME Supplies Inc."
+              className={inputCls} style={sharedInputStyle}
             />
-          </div>
+          </Field>
 
-          <div className="grid grid-cols-2 gap-6">
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">Email</label>
+          <div className="grid grid-cols-2 gap-4">
+            <Field label="Email">
               <input
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                type="email" name="email"
+                value={formData.email} onChange={handleChange}
                 placeholder="contact@supplier.com"
+                className={inputCls} style={sharedInputStyle}
               />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">Phone</label>
+            </Field>
+            <Field label="Phone">
               <input
-                type="tel"
-                name="phone"
-                value={formData.phone}
-                onChange={handleChange}
-                className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                type="tel" name="phone"
+                value={formData.phone} onChange={handleChange}
                 placeholder="+1 234 567 8900"
+                className={inputCls} style={sharedInputStyle}
               />
-            </div>
+            </Field>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">Address</label>
+          <Field label="Address">
             <textarea
-              name="address"
-              value={formData.address}
-              onChange={handleChange}
-              rows={3}
-              className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              name="address" rows={3}
+              value={formData.address} onChange={handleChange}
               placeholder="123 Supply St, Warehouse City, ST 12345"
+              className={inputCls} style={sharedInputStyle}
             />
-          </div>
+          </Field>
 
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">
-              Lead Time (Days)
-            </label>
+          <Field
+            label="Lead Time (Days)"
+            hint="Average delivery time for orders from this supplier"
+          >
             <input
-              type="number"
-              name="leadTimeDays"
-              min="1"
-              value={formData.leadTimeDays}
-              onChange={handleChange}
-              className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              type="number" name="leadTimeDays" min="1"
+              value={formData.leadTimeDays} onChange={handleChange}
+              className={inputCls} style={sharedInputStyle}
             />
-            <p className="text-xs text-slate-500 mt-1">
-              Average delivery time for orders from this supplier
-            </p>
-          </div>
+          </Field>
 
-          <div className="flex gap-4 pt-4">
-            <Button type="submit" disabled={loading}>
+          <div className="flex gap-3 pt-2">
+            <button
+              type="submit" disabled={loading}
+              className="flex items-center gap-2 px-6 py-2.5 rounded-xl font-semibold text-sm transition-all shadow-lg shadow-blue-500/20 text-white disabled:opacity-60"
+              style={{ background: 'linear-gradient(135deg, #3B82F6, #6366F1)' }}
+            >
               {loading ? 'Creating...' : 'Create Supplier'}
-            </Button>
+            </button>
             <Link href="/suppliers">
-              <Button type="button" variant="secondary">
+              <button
+                type="button"
+                className="px-5 py-2.5 rounded-xl font-semibold text-sm transition-all border"
+                style={{ borderColor: 'var(--border)', color: 'var(--foreground)', backgroundColor: 'var(--surface)' }}
+              >
                 Cancel
-              </Button>
+              </button>
             </Link>
           </div>
         </form>

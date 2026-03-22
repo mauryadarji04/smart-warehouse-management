@@ -1,14 +1,21 @@
 import { ReactNode } from 'react';
-import { clsx } from 'clsx';
+import { cn } from '@/lib/utils';
 
 interface CardProps {
   children: ReactNode;
   className?: string;
+  hover?: boolean;
+  role?: string;
+  'aria-label'?: string;
 }
 
-export const Card = ({ children, className }: CardProps) => {
+export const Card = ({ children, className, hover = false, ...rest }: CardProps) => {
   return (
-    <div className={clsx('bg-white rounded-xl shadow-sm border border-slate-100 p-6', className)}>
+    <div
+      className={cn('rounded-xl p-6 transition-shadow', hover && 'card-hover cursor-pointer', className)}
+      style={{ backgroundColor: 'var(--surface)', border: '1px solid var(--border)', boxShadow: 'var(--card-shadow)' }}
+      {...rest}
+    >
       {children}
     </div>
   );
