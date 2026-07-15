@@ -99,8 +99,12 @@ export default function InventoryPage() {
         api.get('/products'),
         api.get('/inventory'),
       ]);
-      setProducts(prodRes.data.data ?? []);
-      setBatches(batchRes.data.data ?? []);
+      const prodRaw = prodRes.data.data;
+      const prodData = Array.isArray(prodRaw) ? prodRaw : (Array.isArray(prodRaw?.data) ? prodRaw.data : []);
+      const batchRaw = batchRes.data.data;
+      const batchData = Array.isArray(batchRaw) ? batchRaw : (Array.isArray(batchRaw?.data) ? batchRaw.data : []);
+      setProducts(prodData);
+      setBatches(batchData);
     } catch {
       console.error('Failed to fetch inventory data');
     } finally {

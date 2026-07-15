@@ -2,26 +2,36 @@ import { Request, Response } from 'express';
 import { prisma } from '../utils/prisma';
 import { sendSuccess, sendError, sendCreated } from '../utils/response';
 import { AppError } from '../utils/AppError';
+import { cacheDel } from '../utils/redis';
+
+const ANALYTICS_KEYS = [
+  'analytics:dashboard', 'analytics:inventory-value',
+  'analytics:abc:90', 'analytics:abc:30',
+  'analytics:turnover:90', 'analytics:turnover:30',
+];
 
 // GET /api/purchase-orders — list all POs
 export const getAllPurchaseOrders = async (req: Request, res: Response) => {
   try {
     const { status } = req.query;
+    const page = Math.max(1, parseInt(req.query.page as string) || 1);
+    const limit = Math.min(100, parseInt(req.query.limit as string) || 50);
+    const skip = (page - 1) * limit;
 
     const where = status ? { status: status as any } : {};
 
-    const orders = await prisma.purchaseOrder.findMany({
-      where,
-      include: {
-        supplier: true,
-        items: {
-          include: { product: true },
-        },
-      },
-      orderBy: { createdAt: 'desc' },
-    });
+    const [orders, total] = await Promise.all([
+      prisma.purchaseOrder.findMany({
+        where,
+        include: { supplier: true, items: { include: { product: true } } },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+      }),
+      prisma.purchaseOrder.count({ where }),
+    ]);
 
-    sendSuccess(res, orders);
+    sendSuccess(res, { data: orders, total, page, limit, pages: Math.ceil(total / limit) });
   } catch (err) {
     sendError(res, 'Failed to fetch purchase orders', 500);
   }
@@ -207,6 +217,7 @@ export const receivePurchaseOrder = async (req: Request, res: Response) => {
     });
 
     sendSuccess(res, updatedOrder, 'Purchase order received and stock updated');
+    await cacheDel(...ANALYTICS_KEYS);
   } catch (err) {
     if (err instanceof AppError) return sendError(res, err.message, err.statusCode);
     sendError(res, 'Failed to receive purchase order', 500);

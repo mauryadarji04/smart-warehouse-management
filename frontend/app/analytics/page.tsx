@@ -91,6 +91,7 @@ export default function AnalyticsPage() {
   const [salesTrends, setSalesTrends] = useState<any[]>([]);
   const [abcAnalysis, setAbcAnalysis] = useState<any>(null);
   const [inventoryValue, setInventoryValue] = useState<any>(null);
+  const [topProducts, setTopProducts] = useState<any[]>([]);
 
   // Comparison mode
   const [compareMode, setCompareMode] = useState(false);
@@ -121,16 +122,18 @@ export default function AnalyticsPage() {
     setLoading(true);
     try {
       const days = Math.ceil((dateRange.to.getTime() - dateRange.from.getTime()) / 86400000) + 1;
-      const [dashRes, trendsRes, abcRes, valueRes] = await Promise.all([
+      const [dashRes, trendsRes, abcRes, valueRes, topRes] = await Promise.all([
         api.get('/analytics/dashboard'),
         api.get(`/analytics/sales-trends?days=${days}`),
         api.get(`/analytics/abc-analysis?days=${days}`),
         api.get('/analytics/inventory-value'),
+        api.get(`/analytics/top-products?days=${days}&limit=5`),
       ]);
       setDashboard(dashRes.data.data);
       setSalesTrends(trendsRes.data.data);
       setAbcAnalysis(abcRes.data.data);
       setInventoryValue(valueRes.data.data);
+      setTopProducts(Array.isArray(topRes.data.data) ? topRes.data.data : []);
 
       if (compareMode) {
         const prevDays = days * 2;
@@ -158,15 +161,15 @@ export default function AnalyticsPage() {
     pdf.save(`analytics-${format(new Date(), 'yyyy-MM-dd')}.pdf`);
   };
 
-  const abcData = abcAnalysis
+  const abcData = abcAnalysis && (abcAnalysis.A?.length || abcAnalysis.B?.length || abcAnalysis.C?.length)
     ? [
-        { name: 'Class A', value: abcAnalysis.stats.classA.count, revenue: abcAnalysis.stats.classA.revenue, products: abcAnalysis.classA },
-        { name: 'Class B', value: abcAnalysis.stats.classB.count, revenue: abcAnalysis.stats.classB.revenue, products: abcAnalysis.classB },
-        { name: 'Class C', value: abcAnalysis.stats.classC.count, revenue: abcAnalysis.stats.classC.revenue, products: abcAnalysis.classC },
-      ]
+        { name: 'Class A', value: abcAnalysis.A?.length ?? 0, revenue: abcAnalysis.stats?.classA?.revenue ?? 0, products: abcAnalysis.A ?? [] },
+        { name: 'Class B', value: abcAnalysis.B?.length ?? 0, revenue: abcAnalysis.stats?.classB?.revenue ?? 0, products: abcAnalysis.B ?? [] },
+        { name: 'Class C', value: abcAnalysis.C?.length ?? 0, revenue: abcAnalysis.stats?.classC?.revenue ?? 0, products: abcAnalysis.C ?? [] },
+      ].filter(d => d.value > 0)
     : [];
 
-  const categoryData = inventoryValue?.byCategory || [];
+  const categoryData: any[] = inventoryValue?.byCategory || [];
 
   const kpis = [
     { label: 'Inventory Value', value: `$${dashboard?.inventoryValue?.toLocaleString() || 0}`, icon: DollarSign, color: 'blue' },
@@ -189,11 +192,17 @@ export default function AnalyticsPage() {
   const renderWidget = (id: string) => {
     switch (id) {
       case 'sales-trends':
+        if (!salesTrends.length) return (
+          <div className="flex flex-col items-center justify-center h-64 gap-2" style={{ color: 'var(--muted)' }}>
+            <TrendingUp className="w-8 h-8 opacity-30" />
+            <p className="text-sm">No sales data yet. Record stock-out operations to see trends.</p>
+          </div>
+        );
         return (
           <ResponsiveContainer width="100%" height={280}>
             <LineChart data={salesTrends}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-              <XAxis dataKey="date" tick={{ fontSize: 11, fill: 'var(--muted)' }} />
+              <XAxis dataKey="date" tick={{ fontSize: 10, fill: 'var(--muted)' }} tickFormatter={(v) => v.slice(5)} />
               <YAxis tick={{ fontSize: 11, fill: 'var(--muted)' }} />
               <Tooltip contentStyle={{ backgroundColor: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 8 }} />
               <Legend />
@@ -218,6 +227,12 @@ export default function AnalyticsPage() {
             </text>
           );
         };
+        if (!abcData.length) return (
+          <div className="flex flex-col items-center justify-center h-64 gap-2" style={{ color: 'var(--muted)' }}>
+            <Activity className="w-8 h-8 opacity-30" />
+            <p className="text-sm">No sales data for ABC analysis. Record stock-out operations first.</p>
+          </div>
+        );
         return (
           <>
             <ResponsiveContainer width="100%" height={220}>
@@ -261,6 +276,12 @@ export default function AnalyticsPage() {
       }
 
       case 'category-value':
+        if (!categoryData.length) return (
+          <div className="flex flex-col items-center justify-center h-64 gap-2" style={{ color: 'var(--muted)' }}>
+            <DollarSign className="w-8 h-8 opacity-30" />
+            <p className="text-sm">No inventory data available.</p>
+          </div>
+        );
         return (
           <ResponsiveContainer width="100%" height={280}>
             <BarChart data={categoryData}>
@@ -277,9 +298,15 @@ export default function AnalyticsPage() {
         );
 
       case 'top-products':
+        if (!topProducts.length) return (
+          <div className="flex flex-col items-center justify-center h-64 gap-2" style={{ color: 'var(--muted)' }}>
+            <Package className="w-8 h-8 opacity-30" />
+            <p className="text-sm">No sales data yet. Record stock-out operations to see top products.</p>
+          </div>
+        );
         return (
           <div className="space-y-3">
-            {dashboard?.topProducts?.slice(0, 5).map((p: any, i: number) => (
+            {topProducts.map((p: any, i: number) => (
               <div key={p.productId} className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="flex items-center justify-center w-7 h-7 rounded-full bg-blue-100 text-blue-600 font-bold text-xs">

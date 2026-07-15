@@ -89,8 +89,11 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     };
   }, [fetchAlertCount]);
 
-  const handleLogout = () => {
-    localStorage.removeItem('token');
+  const handleLogout = async () => {
+    const refreshToken = localStorage.getItem('refreshToken');
+    try { if (refreshToken) await api.post('/auth/logout', { refreshToken }); } catch { /* ignore */ }
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
     localStorage.removeItem('user');
     setUser(null);
     setShowProfile(false);

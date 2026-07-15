@@ -43,9 +43,10 @@ export default function NewOrderPage() {
 
   useEffect(() => {
     const fetchData = async () => {
-      const [sRes, pRes] = await Promise.all([api.get('/suppliers'), api.get('/products')]);
-      setSuppliers(sRes.data.data);
-      setProducts(pRes.data.data);
+      const [sRes, pRes] = await Promise.all([api.get('/suppliers'), api.get('/products?limit=500')]);
+      setSuppliers(Array.isArray(sRes.data.data) ? sRes.data.data : []);
+      const prodRaw = pRes.data.data;
+      setProducts(Array.isArray(prodRaw) ? prodRaw : (Array.isArray(prodRaw?.data) ? prodRaw.data : []));
     };
     fetchData();
   }, []);

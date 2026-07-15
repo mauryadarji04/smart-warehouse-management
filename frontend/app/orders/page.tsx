@@ -52,7 +52,8 @@ export default function OrdersPage() {
   const fetchOrders = async () => {
     try {
       const res = await api.get('/purchase-orders');
-      setOrders(res.data.data);
+      const raw = res.data.data;
+      setOrders(Array.isArray(raw) ? raw : (Array.isArray(raw?.data) ? raw.data : []));
     } catch (err) { console.error(err); }
     finally { setLoading(false); }
   };

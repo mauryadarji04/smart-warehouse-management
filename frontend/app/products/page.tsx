@@ -63,8 +63,10 @@ export default function ProductsPage() {
   const fetchProducts = async () => {
     try {
       const res = await api.get('/products');
-      setProducts(res.data.data);
-      setUndoProducts(res.data.data);
+      const raw = res.data.data;
+      const data = Array.isArray(raw) ? raw : (Array.isArray(raw?.data) ? raw.data : []);
+      setProducts(data);
+      setUndoProducts(data);
     } catch (err) {
       console.error('Failed to fetch products:', err);
     } finally {
@@ -76,7 +78,7 @@ export default function ProductsPage() {
 
   // Sync undo stack → products display
   useEffect(() => {
-    if (undoProducts.length > 0 || products.length > 0) setProducts(undoProducts);
+    if (Array.isArray(undoProducts)) setProducts(undoProducts);
   }, [undoProducts]); // eslint-disable-line
 
   const deleteProduct = async (id: string) => {

@@ -66,22 +66,23 @@ export default function DashboardPage() {
   const fetchStats = useCallback(async (manual = false) => {
     if (manual) setRefreshing(true);
     try {
-      const [products, lowStock, alerts] = await Promise.all([
-        api.get('/products'),
+      const [productsRes, lowStock, alerts] = await Promise.all([
+        api.get('/products?limit=500'),
         api.get('/inventory/low-stock'),
         api.get('/alerts/stats'),
       ]);
 
-      const totalInventory = products.data.data.reduce(
+      const allProducts: any[] = productsRes.data.data?.data ?? [];
+      const totalInventory = allProducts.reduce(
         (sum: number, p: any) => sum + (p.totalQuantity || 0),
         0
       );
 
       const newStats: Stats = {
-        totalProducts: products.data.data.length,
-        lowStock: lowStock.data.data.length,
+        totalProducts: productsRes.data.data?.total ?? allProducts.length,
+        lowStock: Array.isArray(lowStock.data.data) ? lowStock.data.data.length : 0,
         totalInventory,
-        unreadAlerts: alerts.data.data.unread,
+        unreadAlerts: alerts.data.data?.unread ?? 0,
       };
 
       setPrevStats((prev) => prev ?? newStats);

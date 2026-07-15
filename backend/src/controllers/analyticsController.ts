@@ -1,13 +1,34 @@
 import { Request, Response } from 'express';
 import { sendSuccess, sendError } from '../utils/response';
 import * as analyticsService from '../services/analyticsService';
+import { cacheGet, cacheSet } from '../utils/redis';
+
+const TTL = 60; // seconds
+
+async function cached<T>(key: string, fn: () => Promise<T>): Promise<T> {
+  const hit = await cacheGet<T>(key);
+  if (hit !== null) return hit;
+  const data = await fn();
+  await cacheSet(key, data, TTL);
+  return data;
+}
+
+// GET /api/analytics/dashboard
+export const getDashboard = async (_req: Request, res: Response) => {
+  try {
+    const data = await cached('analytics:dashboard', () => analyticsService.getDashboardSummary());
+    sendSuccess(res, data);
+  } catch {
+    sendError(res, 'Failed to get dashboard data', 500);
+  }
+};
 
 // GET /api/analytics/inventory-value
 export const getInventoryValue = async (_req: Request, res: Response) => {
   try {
-    const data = await analyticsService.getInventoryValue();
+    const data = await cached('analytics:inventory-value', () => analyticsService.getInventoryValue());
     sendSuccess(res, data);
-  } catch (err) {
+  } catch {
     sendError(res, 'Failed to calculate inventory value', 500);
   }
 };
@@ -16,9 +37,9 @@ export const getInventoryValue = async (_req: Request, res: Response) => {
 export const getABCAnalysis = async (req: Request, res: Response) => {
   try {
     const days = parseInt(req.query.days as string) || 90;
-    const data = await analyticsService.getABCAnalysis(days);
+    const data = await cached(`analytics:abc:${days}`, () => analyticsService.getABCAnalysis(days));
     sendSuccess(res, data);
-  } catch (err) {
+  } catch {
     sendError(res, 'Failed to perform ABC analysis', 500);
   }
 };
@@ -27,9 +48,9 @@ export const getABCAnalysis = async (req: Request, res: Response) => {
 export const getStockTurnover = async (req: Request, res: Response) => {
   try {
     const days = parseInt(req.query.days as string) || 90;
-    const data = await analyticsService.getStockTurnover(days);
+    const data = await cached(`analytics:turnover:${days}`, () => analyticsService.getStockTurnover(days));
     sendSuccess(res, data);
-  } catch (err) {
+  } catch {
     sendError(res, 'Failed to calculate stock turnover', 500);
   }
 };
@@ -38,9 +59,9 @@ export const getStockTurnover = async (req: Request, res: Response) => {
 export const getForecastAccuracy = async (req: Request, res: Response) => {
   try {
     const days = parseInt(req.query.days as string) || 30;
-    const data = await analyticsService.getForecastAccuracy(days);
+    const data = await cached(`analytics:forecast-accuracy:${days}`, () => analyticsService.getForecastAccuracy(days));
     sendSuccess(res, data);
-  } catch (err) {
+  } catch {
     sendError(res, 'Failed to get forecast accuracy', 500);
   }
 };
@@ -49,9 +70,9 @@ export const getForecastAccuracy = async (req: Request, res: Response) => {
 export const getSalesTrends = async (req: Request, res: Response) => {
   try {
     const days = parseInt(req.query.days as string) || 30;
-    const data = await analyticsService.getSalesTrends(days);
+    const data = await cached(`analytics:sales-trends:${days}`, () => analyticsService.getSalesTrends(days));
     sendSuccess(res, data);
-  } catch (err) {
+  } catch {
     sendError(res, 'Failed to get sales trends', 500);
   }
 };
@@ -61,20 +82,11 @@ export const getTopProducts = async (req: Request, res: Response) => {
   try {
     const days = parseInt(req.query.days as string) || 30;
     const limit = parseInt(req.query.limit as string) || 10;
-    const data = await analyticsService.getTopSellingProducts(days, limit);
+    const data = await cached(`analytics:top-products:${days}:${limit}`, () =>
+      analyticsService.getTopSellingProducts(days, limit)
+    );
     sendSuccess(res, data);
-  } catch (err) {
+  } catch {
     sendError(res, 'Failed to get top products', 500);
   }
 };
-
-// GET /api/analytics/dashboard
-export const getDashboard = async (_req: Request, res: Response) => {
-  try {
-    const data = await analyticsService.getDashboardSummary();
-    sendSuccess(res, data);
-  } catch (err) {
-    sendError(res, 'Failed to get dashboard data', 500);
-  }
-};
-

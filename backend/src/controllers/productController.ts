@@ -4,17 +4,21 @@ import { sendSuccess, sendError, sendCreated } from '../utils/response';
 import { AppError } from '../utils/AppError';
 
 // GET /api/products — list all products with current stock
-export const getAllProducts = async (_req: Request, res: Response) => {
+export const getAllProducts = async (req: Request, res: Response) => {
   try {
-    const products = await prisma.product.findMany({
-      include: {
-        supplier: true,
-        inventory: {
-          select: { quantity: true },
-        },
-      },
-      orderBy: { createdAt: 'desc' },
-    });
+    const page = Math.max(1, parseInt(req.query.page as string) || 1);
+    const limit = Math.min(100, parseInt(req.query.limit as string) || 50);
+    const skip = (page - 1) * limit;
+
+    const [products, total] = await Promise.all([
+      prisma.product.findMany({
+        include: { supplier: true, inventory: { select: { quantity: true } } },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+      }),
+      prisma.product.count(),
+    ]);
 
     const productsWithStock = products.map((p) => ({
       ...p,
@@ -22,7 +26,7 @@ export const getAllProducts = async (_req: Request, res: Response) => {
       inventory: undefined,
     }));
 
-    sendSuccess(res, productsWithStock);
+    sendSuccess(res, { data: productsWithStock, total, page, limit, pages: Math.ceil(total / limit) });
   } catch (err) {
     sendError(res, 'Failed to fetch products', 500);
   }

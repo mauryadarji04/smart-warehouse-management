@@ -2,20 +2,35 @@ import { Request, Response } from 'express';
 import { prisma } from '../utils/prisma';
 import { sendSuccess, sendError, sendCreated } from '../utils/response';
 import { AppError } from '../utils/AppError';
+import { cacheDel } from '../utils/redis';
+
+const ANALYTICS_KEYS = [
+  'analytics:dashboard',
+  'analytics:inventory-value',
+  'analytics:abc:90', 'analytics:abc:30',
+  'analytics:turnover:90', 'analytics:turnover:30',
+  'analytics:sales-trends:30', 'analytics:sales-trends:7',
+  'analytics:top-products:30:10', 'analytics:top-products:30:5',
+];
 
 // GET /api/inventory — list all inventory batches
-export const getAllInventory = async (_req: Request, res: Response) => {
+export const getAllInventory = async (req: Request, res: Response) => {
   try {
-    const inventory = await prisma.inventory.findMany({
-      include: {
-        product: {
-          include: { supplier: true },
-        },
-      },
-      orderBy: { createdAt: 'desc' },
-    });
+    const page = Math.max(1, parseInt(req.query.page as string) || 1);
+    const limit = Math.min(100, parseInt(req.query.limit as string) || 50);
+    const skip = (page - 1) * limit;
 
-    sendSuccess(res, inventory);
+    const [inventory, total] = await Promise.all([
+      prisma.inventory.findMany({
+        include: { product: { include: { supplier: true } } },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+      }),
+      prisma.inventory.count(),
+    ]);
+
+    sendSuccess(res, { data: inventory, total, page, limit, pages: Math.ceil(total / limit) });
   } catch (err) {
     sendError(res, 'Failed to fetch inventory', 500);
   }
@@ -90,6 +105,7 @@ export const stockIn = async (req: Request, res: Response) => {
       });
     }
 
+    await cacheDel(...ANALYTICS_KEYS);
     sendCreated(res, inventory, 'Stock added successfully');
   } catch (err) {
     if (err instanceof AppError) return sendError(res, err.message, err.statusCode);
@@ -203,6 +219,7 @@ export const stockOut = async (req: Request, res: Response) => {
       }
     }
 
+    await cacheDel(...ANALYTICS_KEYS);
     sendSuccess(res, { quantityRemoved: parseInt(quantity) }, 'Stock removed successfully');
   } catch (err) {
     if (err instanceof AppError) return sendError(res, err.message, err.statusCode);

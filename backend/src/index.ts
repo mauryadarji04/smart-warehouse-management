@@ -1,7 +1,15 @@
 import express from 'express';
 import cors from 'cors';
-import morgan from 'morgan';
+import helmet from 'helmet';
+import pinoHttp from 'pino-http';
 import dotenv from 'dotenv';
+
+dotenv.config();
+
+if (!process.env.JWT_SECRET) throw new Error('JWT_SECRET env variable is required');
+if (!process.env.JWT_REFRESH_SECRET) throw new Error('JWT_REFRESH_SECRET env variable is required');
+
+import { logger } from './utils/logger';
 import productRoutes from './routes/productRoutes';
 import inventoryRoutes from './routes/inventoryRoutes';
 import alertRoutes from './routes/alertRoutes';
@@ -9,65 +17,45 @@ import supplierRoutes from './routes/supplierRoutes';
 import purchaseOrderRoutes from './routes/purchaseOrderRoutes';
 import reorderRoutes from './routes/reorderRoutes';
 import { errorHandler } from './middleware/errorHandler';
-import { initCronJobs } from './cron/scheduler';
+import { scheduleRecurringJobs } from './queues/jobQueues';
 import forecastRoutes from './routes/forecastRoutes';
 import analyticsRoutes from './routes/analyticsRoutes';
 import authRoutes from './routes/authRoutes';
-
-
-dotenv.config();
+import { globalLimiter } from './middleware/rateLimiter';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
 // ── Middleware ────────────────────────────────────────────────
+app.use(helmet());
 app.use(cors({ origin: process.env.FRONTEND_URL || 'http://localhost:3000' }));
 app.use(express.json());
-app.use(morgan('dev'));
+app.use(pinoHttp({ logger }));
+app.use(globalLimiter);
 
 // ── Health check ──────────────────────────────────────────────
 app.get('/health', (_req, res) => {
-  res.json({ 
-    status: 'OK', 
-    timestamp: new Date().toISOString(), 
-    env: process.env.NODE_ENV,
-    phase: 'Phase 7 — Authentication'
-  });
+  res.json({ status: 'OK', timestamp: new Date().toISOString(), env: process.env.NODE_ENV });
 });
 
 // ── API Routes ────────────────────────────────────────────────
-// Phase 7 (Auth first — all other routes depend on it)
 app.use('/api/auth', authRoutes);
-
-// Phase 1
 app.use('/api/products', productRoutes);
 app.use('/api/inventory', inventoryRoutes);
 app.use('/api/alerts', alertRoutes);
-
-// Phase 2
 app.use('/api/suppliers', supplierRoutes);
 app.use('/api/purchase-orders', purchaseOrderRoutes);
-
-// Phase 3
 app.use('/api/reorder', reorderRoutes);
-
-// Phase 4
 app.use('/api/forecasts', forecastRoutes);
-
-// Phase 6
 app.use('/api/analytics', analyticsRoutes);
 
 // ── Error Handler ─────────────────────────────────────────────
 app.use(errorHandler);
 
-// ── Start Server & Cron ───────────────────────────────────────
+// ── Start Server ──────────────────────────────────────────────
 app.listen(PORT, () => {
-  console.log(`🚀 Server running on http://localhost:${PORT}`);
-  console.log(`📦 Smart Warehouse API — ${process.env.NODE_ENV || 'development'} mode`);
-  console.log(`✅ Phase 7 authentication: /api/auth routes are live`);
-  
-  // Initialize cron jobs
-  initCronJobs();
+  logger.info({ port: PORT, env: process.env.NODE_ENV }, '🚀 Smart Warehouse API started');
+  scheduleRecurringJobs().catch((err) => logger.error(err, 'Failed to schedule jobs'));
 });
 
 export default app;

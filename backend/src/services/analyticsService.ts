@@ -288,11 +288,16 @@ export const getSalesTrends = async (days: number = 30) => {
       return acc;
     }, {});
 
-    const trends = Object.values(dailySales).sort((a: any, b: any) => 
-      a.date.localeCompare(b.date)
-    );
+    // Fill in missing days so the chart has no gaps
+    const allDays: any[] = [];
+    for (let i = days - 1; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const key = d.toISOString().split('T')[0];
+      allDays.push(dailySales[key] || { date: key, totalQuantity: 0, totalRevenue: 0, orderCount: 0 });
+    }
 
-    return trends;
+    return allDays;
   } catch (error) {
     console.error('Failed to get sales trends:', error);
     throw error;
@@ -385,7 +390,7 @@ export const getDashboardSummary = async () => {
       productCount: inventoryValue.productCount,
       turnoverRatio: turnover.turnoverRatio,
       lowStockCount,
-      totalSalesUnits: totalSales._sum.quantity || 0,
+      totalSalesUnits: Math.abs(totalSales._sum.quantity || 0),
       forecastAccuracy: forecastAccuracy.accuracy,
       topProducts,
     };

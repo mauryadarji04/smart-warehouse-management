@@ -162,8 +162,9 @@ export default function LoginPage() {
     try {
       if (mode === 'login') {
         const res = await api.post('/auth/login', { email: formData.email, password: formData.password });
-        const { token, user } = res.data.data;
-        localStorage.setItem('token', token);
+        const { accessToken, refreshToken, user } = res.data.data;
+        localStorage.setItem('accessToken', accessToken);
+        localStorage.setItem('refreshToken', refreshToken);
         localStorage.setItem('user', JSON.stringify(user));
         if (rememberMe) localStorage.setItem('remember-email', formData.email);
         window.dispatchEvent(new Event('user-login'));
@@ -173,8 +174,9 @@ export default function LoginPage() {
         if (formData.password !== formData.confirmPassword) { setError('Passwords do not match'); return; }
         if (formData.password.length < 6) { setError('Password must be at least 6 characters'); return; }
         const res = await api.post('/auth/register', { name: formData.name, email: formData.email, password: formData.password });
-        const { token, user } = res.data.data;
-        localStorage.setItem('token', token);
+        const { accessToken, refreshToken, user } = res.data.data;
+        localStorage.setItem('accessToken', accessToken);
+        localStorage.setItem('refreshToken', refreshToken);
         localStorage.setItem('user', JSON.stringify(user));
         window.dispatchEvent(new Event('user-login'));
         router.push('/');
