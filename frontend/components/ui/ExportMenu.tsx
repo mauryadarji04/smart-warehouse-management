@@ -36,26 +36,21 @@ export function ExportMenu({ data, filename = 'export', headers, onShareLink }: 
   };
 
   const exportExcel = async () => {
-    // Lightweight XLSX via SheetJS (dynamic import to keep bundle small)
     try {
-      // @ts-ignore
-      const XLSX = await import('xlsx');
+      const XLSX = await import(/* webpackIgnore: true */ 'xlsx' as any);
       const ws = XLSX.utils.json_to_sheet(data);
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
       XLSX.writeFile(wb, `${filename}.xlsx`);
     } catch {
-      // Fallback to CSV if xlsx not installed
       exportCSV();
     }
   };
 
   const exportPDF = async () => {
     try {
-      // @ts-ignore
-      const { default: jsPDF } = await import('jspdf');
-      // @ts-ignore
-      const { default: autoTable } = await import('jspdf-autotable');
+      const { default: jsPDF } = await import(/* webpackIgnore: true */ 'jspdf' as any);
+      const { default: autoTable } = await import(/* webpackIgnore: true */ 'jspdf-autotable' as any);
       const doc = new jsPDF({ orientation: 'landscape' });
       const keys = headers ?? Object.keys(data[0] ?? {});
       autoTable(doc, {
