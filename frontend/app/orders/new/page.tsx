@@ -8,7 +8,6 @@ import {
   ArrowLeft, ArrowRight, Check, Plus, Trash2, Search,
   Package, AlertTriangle, Calculator, FileText, Truck,
 } from 'lucide-react';
-import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/components/ui/tooltip';
 import Link from 'next/link';
 
 interface OrderItem {
@@ -118,7 +117,6 @@ export default function NewOrderPage() {
     step === 1 ? !!supplierId : step === 2 ? items.length > 0 : true;
 
   return (
-    <TooltipProvider>
     <div className="max-w-3xl mx-auto space-y-6">
       {/* Back */}
       <Link
@@ -385,18 +383,14 @@ export default function NewOrderPage() {
                             style={{ backgroundColor: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--foreground)' }}
                           />
                           {eoq > 0 && item.quantity !== eoq && (
-                            <Tooltip>
-                              <TooltipTrigger render={
-                                <button
-                                  onClick={() => updateItem(item.productId, 'quantity', eoq)}
-                                  className="absolute -top-2 -right-2 flex items-center gap-0.5 text-[10px] px-1.5 py-0.5 rounded-full font-bold"
-                                  style={{ backgroundColor: '#EFF6FF', color: '#3B82F6' }}
-                                >
-                                  <Calculator className="w-2.5 h-2.5" />{eoq}
-                                </button>
-                              }>
-                              <TooltipContent>Click to apply EOQ = {eoq} units</TooltipContent>
-                            </Tooltip>
+                            <button
+                              onClick={() => updateItem(item.productId, 'quantity', eoq)}
+                              title={`Click to apply EOQ = ${eoq} units`}
+                              className="absolute -top-2 -right-2 flex items-center gap-0.5 text-[10px] px-1.5 py-0.5 rounded-full font-bold"
+                              style={{ backgroundColor: '#EFF6FF', color: '#3B82F6' }}
+                            >
+                              <Calculator className="w-2.5 h-2.5" />{eoq}
+                            </button>
                           )}
                         </div>
                       </div>
@@ -608,6 +602,5 @@ export default function NewOrderPage() {
         )}
       </div>
     </div>
-    </TooltipProvider>
   );
 }

@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import { Card } from '@/components/ui/Card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/components/ui/tooltip';
 import { api } from '@/lib/api';
 import { PurchaseOrder, POStatus } from '@/lib/types';
 import {
@@ -99,7 +98,6 @@ export default function OrdersPage() {
   }
 
   return (
-    <TooltipProvider>
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-start justify-between">
@@ -233,22 +231,16 @@ export default function OrdersPage() {
 
                         {/* Delivery countdown with tooltip */}
                         {deliveryText && status !== 'RECEIVED' && (
-                          <Tooltip>
-                            <TooltipTrigger render={
-                              <div
-                                className="flex items-center gap-1.5 text-xs font-medium cursor-default"
-                                style={{ color: urgency === 'overdue' ? '#EF4444' : urgency === 'soon' ? '#F59E0B' : 'var(--muted)' }}
-                              >
-                                {urgency === 'overdue'
-                                  ? <AlertCircle className="w-3.5 h-3.5" />
-                                  : <Clock className="w-3.5 h-3.5" />}
-                                {deliveryText}
-                              </div>
-                            }>
-                            <TooltipContent>
-                              Expected: {new Date(order.expectedDelivery!).toLocaleDateString()}
-                            </TooltipContent>
-                          </Tooltip>
+                          <div
+                            title={`Expected: ${new Date(order.expectedDelivery!).toLocaleDateString()}`}
+                            className="flex items-center gap-1.5 text-xs font-medium cursor-default"
+                            style={{ color: urgency === 'overdue' ? '#EF4444' : urgency === 'soon' ? '#F59E0B' : 'var(--muted)' }}
+                          >
+                            {urgency === 'overdue'
+                              ? <AlertCircle className="w-3.5 h-3.5" />
+                              : <Clock className="w-3.5 h-3.5" />}
+                            {deliveryText}
+                          </div>
                         )}
 
                         {/* Transit progress bar */}
@@ -457,6 +449,5 @@ export default function OrdersPage() {
           })()}
         </Dialog>
       </div>
-    </TooltipProvider>
   );
 }
