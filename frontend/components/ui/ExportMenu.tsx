@@ -38,6 +38,7 @@ export function ExportMenu({ data, filename = 'export', headers, onShareLink }: 
   const exportExcel = async () => {
     // Lightweight XLSX via SheetJS (dynamic import to keep bundle small)
     try {
+      // @ts-ignore
       const XLSX = await import('xlsx');
       const ws = XLSX.utils.json_to_sheet(data);
       const wb = XLSX.utils.book_new();
@@ -51,7 +52,9 @@ export function ExportMenu({ data, filename = 'export', headers, onShareLink }: 
 
   const exportPDF = async () => {
     try {
+      // @ts-ignore
       const { default: jsPDF } = await import('jspdf');
+      // @ts-ignore
       const { default: autoTable } = await import('jspdf-autotable');
       const doc = new jsPDF({ orientation: 'landscape' });
       const keys = headers ?? Object.keys(data[0] ?? {});

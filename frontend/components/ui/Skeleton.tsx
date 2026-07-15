@@ -1,16 +1,18 @@
 import { cn } from '@/lib/utils';
+import { CSSProperties } from 'react';
 
 interface SkeletonProps {
   className?: string;
   rounded?: 'sm' | 'md' | 'lg' | 'full' | 'xl' | '2xl';
+  style?: CSSProperties;
 }
 
-export function Skeleton({ className, rounded = 'lg' }: SkeletonProps) {
+export function Skeleton({ className, rounded = 'lg', style }: SkeletonProps) {
   const r = {
     sm: 'rounded-sm', md: 'rounded-md', lg: 'rounded-lg',
     xl: 'rounded-xl', '2xl': 'rounded-2xl', full: 'rounded-full',
   }[rounded];
-  return <div className={cn('animate-shimmer', r, className)} aria-hidden="true" />;
+  return <div className={cn('animate-shimmer', r, className)} style={style} aria-hidden="true" />;
 }
 
 export function StatCardSkeleton() {

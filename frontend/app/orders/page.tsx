@@ -234,7 +234,7 @@ export default function OrdersPage() {
                         {/* Delivery countdown with tooltip */}
                         {deliveryText && status !== 'RECEIVED' && (
                           <Tooltip>
-                            <TooltipTrigger asChild>
+                            <TooltipTrigger render={
                               <div
                                 className="flex items-center gap-1.5 text-xs font-medium cursor-default"
                                 style={{ color: urgency === 'overdue' ? '#EF4444' : urgency === 'soon' ? '#F59E0B' : 'var(--muted)' }}
@@ -244,7 +244,7 @@ export default function OrdersPage() {
                                   : <Clock className="w-3.5 h-3.5" />}
                                 {deliveryText}
                               </div>
-                            </TooltipTrigger>
+                            }>
                             <TooltipContent>
                               Expected: {new Date(order.expectedDelivery!).toLocaleDateString()}
                             </TooltipContent>

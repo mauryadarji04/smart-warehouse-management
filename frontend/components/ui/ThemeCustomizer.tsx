@@ -140,7 +140,7 @@ export function ThemeCustomizer({ open, onClose }: Props) {
                     'w-8 h-8 rounded-full transition-all hover:scale-110 active:scale-95',
                     color === c.value && 'ring-2 ring-offset-2 ring-offset-[var(--surface)] scale-110'
                   )}
-                  style={{ backgroundColor: c.value, ringColor: c.value }}
+                  style={{ backgroundColor: c.value }}
                 />
               ))}
               {/* Custom color */}
