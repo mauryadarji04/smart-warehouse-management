@@ -621,80 +621,6 @@ postman_collection.json
 
 ---
 
-## 🎯 **Interview Talking Points**
-
-### **Technical Depth**
-
-**"Tell me about a complex algorithm you implemented"**
-> "I implemented the Economic Order Quantity algorithm to optimize inventory reorder sizes. The formula balances ordering costs against holding costs to find the mathematically optimal order quantity. I calculate annual demand from sales data, then use EOQ = √((2×D×S)/H) where D is annual demand, S is ordering cost per order, and H is holding cost per unit per year. This reduced theoretical inventory holding costs by 20% compared to fixed reorder quantities."
-
-**"How did you implement authentication?"**
-> "I built JWT-based authentication with bcrypt password hashing. When users register, passwords are hashed with bcrypt using 10 salt rounds before database storage. On login, I verify credentials with bcrypt.compare(), then generate a JWT containing userId, email, and role, signed with a secret key. The token expires after 7 days. I use Express middleware to verify tokens on protected routes and implement role-based access control with separate middleware for admin-only endpoints."
-
-**"Explain your forecasting system"**
-> "I implemented a 7-day moving average forecasting algorithm. Every stock-out operation records a sale, which aggregates daily in the SalesHistory table. At midnight, a cron job calculates the average of the last 7 days' sales for each product and generates forecasts for the next 7 days. The forecast accuracy is tracked by comparing predictions with actual sales, calculating Mean Absolute Error and Mean Absolute Percentage Error. The forecast automatically updates each product's avgDailyDemand, which feeds into the EOQ calculation, creating a self-optimizing system."
-
-### **Architecture Decisions**
-
-**"Why did you separate services from controllers?"**
-> "I follow the separation of concerns principle. Controllers handle HTTP request/response logic, while services contain pure business logic. This makes the code more testable—I can unit test business logic without mocking HTTP requests. It also allows service reuse; for example, the reorderService is called both by the manual API endpoint and the automated cron job."
-
-**"How does your system handle data consistency?"**
-> "I use Prisma's transaction API to ensure atomicity. For example, stock-out operations deduct from multiple inventory batches (FIFO), create transaction logs, and record sales—all within a single database transaction. If any operation fails, everything rolls back. This prevents scenarios like inventory being updated but sales not being recorded."
-
----
-
-## 🐛 **Common Issues & Solutions**
-
-### **Database Connection Failed**
-```bash
-# Check PostgreSQL is running
-sudo service postgresql status
-
-# Verify connection string in .env
-DATABASE_URL="postgresql://USER:PASSWORD@localhost:5432/DATABASE"
-
-# Test connection
-npx prisma db pull
-```
-
-### **Port Already in Use**
-```bash
-# Find process using port 5000
-lsof -ti:5000
-
-# Kill process
-kill -9 <PID>
-
-# Or use different port in .env
-PORT=5001
-```
-
-### **Cron Jobs Not Running**
-```bash
-# Check server logs
-npm run dev
-
-# Manually trigger
-curl -X POST http://localhost:5000/api/reorder/check
-
-# Verify cron schedule in .env
-CRON_REORDER_CHECK="0 6 * * *"  # Valid cron expression
-```
-
-### **JWT Token Invalid**
-```bash
-# Regenerate secret
-openssl rand -base64 32
-
-# Update .env
-JWT_SECRET="<new-secret>"
-
-# Restart server
-```
-
----
-
 ## 🚀 **Deployment**
 
 ### **Backend (Railway / Render)**
@@ -763,21 +689,15 @@ Contributions are welcome! Please follow these steps:
 4. Push to the branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
 
----
-
-## 📝 **License**
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ---
 
 ## 👨‍💻 **Author**
 
 **Your Name**
-- Portfolio: [yourportfolio.com](https://yourportfolio.com)
-- LinkedIn: [linkedin.com/in/yourprofile](https://linkedin.com/in/yourprofile)
-- GitHub: [@yourusername](https://github.com/yourusername)
-- Email: your.email@example.com
+- LinkedIn: [https://linkedin.com/in/maurya-darji-b9ab80288](https://linkedin.com/in/yourprofile)
+- GitHub: [@mauryadarji04](https://github.com/yourusername)
+- Email: mauryadarji4@gmail.com
 
 ---
 
@@ -822,18 +742,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-## ⭐ **Star History**
-
-[![Star History Chart](https://api.star-history.com/svg?repos=yourusername/smart-warehouse&type=Date)](https://star-history.com/#yourusername/smart-warehouse&Date)
-
----
-
 <div align="center">
 
-**Built with ❤️ by [Your Name]**
-
-If this project helped you, please consider giving it a ⭐!
-
-[Report Bug](https://github.com/yourusername/smart-warehouse/issues) · [Request Feature](https://github.com/yourusername/smart-warehouse/issues)
+[Report Bug](https://github.com/mauryadarji04/smart-warehouse-management/issues) · [Request Feature](https://github.com/mauryadarji04/smart-warehouse-management/issues)
 
 </div>
